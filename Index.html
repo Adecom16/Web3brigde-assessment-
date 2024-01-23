@@ -1,1 +1,57 @@
-i
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Merkle Root Verification</title>
+</head>
+<body>
+
+<script>
+function calculateMerkleRoot(addresses) {
+  const hashedAddresses = addresses.map(addr => hash(addr));
+
+  while (hashedAddresses.length > 1) {
+    const combinedHashes = [];
+    for (let i = 0; i < hashedAddresses.length; i += 2) {
+      const concatHash = (hashedAddresses[i] + (hashedAddresses[i + 1] || ''));
+      combinedHashes.push(hash(concatHash));
+    }
+    hashedAddresses = combinedHashes;
+  }
+
+  return hashedAddresses[0];
+}
+
+function hash(data) {
+  return crypto.createHash('sha256').update(data).digest('hex');
+}
+
+function verifyMerkleProof(merkleRoot, targetAddress, merklePath) {
+  let currentHash = hash(targetAddress);
+
+  for (const siblingHash of merklePath) {
+    currentHash = hash(currentHash + siblingHash);
+  }
+
+  return currentHash === merkleRoot;
+}
+
+const addresses = [
+  '0x5AaFeCeFED7c58f0eA7a1783b3a579D7e5fDC666',
+  '0x1aF4b0d4162733F942f06e1b75c2278A5034e2aA',
+  '0xEf5d34B2BBBEdc6019b9771b6b30F86a28e91e2F',
+  '0x7C7b26c98e47797F781911bDE79dD35c16D673F7',
+  '0xC0fA1b63e36BeC2E904b5F1a836dD82b7E2bc077'
+];
+
+const merkleRoot = calculateMerkleRoot(addresses);
+const targetAddress = '0x5AaFeCeFED7c58f0eA7a1783b3a579D7e5fDC666';
+const merklePath = ['hash1', 'hash2', 'hash3'];
+
+const isVerified = verifyMerkleProof(merkleRoot, targetAddress, merklePath);
+console.log('Verification Result:', isVerified);
+</script>
+
+</body>
+</html>
